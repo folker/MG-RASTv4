@@ -268,33 +268,35 @@
 		}
 	    }
 	}
-	mg.allmetadata = allmetadata;
+	mg.allmetadata = allmetadata.length ? allmetadata : null;
 
 	var sourcehits = [];
 	var sourcehitsprotein = [];
 	var sourcehitsrna = [];
 	var rna = { "SSU": true, "LSU": true, "RDP": true, "Greengenes": true };
+	var sourcelist = ["RefSeq", "IMG", "TrEMBL", "Subsystems", "KEGG", "GenBank", "SwissProt", "PATRIC", "eggNOG", "KO", "GO", "COG", "RDP", "LSU", "SSU", "NOG", "Greengenes"];
 	if (mg.hasOwnProperty('statistics') && mg.statistics.hasOwnProperty('source')) {
-	    var labels = ["e^-3 to e^-5", "e^-5 to e^-10", "e^-10 to e^-20", "e^-20 to e^-30", "e^-30 & less" ];
+	    var labels = [ "e^-30 & less", "e^-20 to e^-30", "e^-10 to e^-20", "e^-5 to e^-10", "e^-3 to e^-5" ];
 	    for (var h=0; h<5; h++) {
 		sourcehits.push( { "label": labels[h], "values": [], "labels": [] } );
 		sourcehitsprotein.push( { "label": labels[h], "values": [], "labels": [] } );
 		sourcehitsrna.push( { "label": labels[h], "values": [], "labels": [] } );
-		for (var i in mg.statistics.source) {
+		for (var i=0; i<sourcelist.length; i++) {
+		    var s = sourcelist[i];
 		    if (h == 0) {
-			sourcehits[h].labels.push(i);
-			if (rna[i]) {
-			    sourcehitsrna[h].labels.push(i);
+			sourcehits[h].labels.push(s);
+			if (rna[s]) {
+			    sourcehitsrna[h].labels.push(s);
 			} else {
-			    sourcehitsprotein[h].labels.push(i);
+			    sourcehitsprotein[h].labels.push(s);
 			}
 		    }
-		    if (mg.statistics.source.hasOwnProperty(i)) {
-			sourcehits[h].values.push(mg.statistics.source[i].evalue[h]);
-			if (rna[i]) {
-			    sourcehitsrna[h].values.push(mg.statistics.source[i].evalue[h]);
+		    if (mg.statistics.source.hasOwnProperty(s)) {
+			sourcehits[h].values.push(mg.statistics.source[s].evalue[4-h]);
+			if (rna[s]) {
+			    sourcehitsrna[h].values.push(mg.statistics.source[s].evalue[4-h]);
 			} else {
-			    sourcehitsprotein[h].values.push(mg.statistics.source[i].evalue[h]);
+			    sourcehitsprotein[h].values.push(mg.statistics.source[s].evalue[4-h]);
 			}
 		    }
 		}
@@ -397,11 +399,21 @@
 	var sequenceGCQC = [];
 	var sequenceGCUpload = [];
 	if (mg.hasOwnProperty('statistics') && mg.statistics.hasOwnProperty('gc_histogram')) {
+	    var qc = [];
+	    var up = [];
+	    for (var i=0; i<101; i++) {
+		qc[i] = 0;
+		up[i] = 0;
+	    }
 	    for (var i=0; i<mg.statistics.gc_histogram.post_qc.length; i++) {
-		sequenceGCQC.push({ x: mg.statistics.gc_histogram.post_qc[i][0], y: mg.statistics.gc_histogram.post_qc[i][1] });
+		qc[parseInt(mg.statistics.gc_histogram.post_qc[i][0])] += mg.statistics.gc_histogram.post_qc[i][1];
 	    }
 	    for (var i=0; i<mg.statistics.gc_histogram.upload.length; i++) {
-		sequenceGCUpload.push({ x: mg.statistics.gc_histogram.upload[i][0], y: mg.statistics.gc_histogram.upload[i][1] });
+		up[parseInt(mg.statistics.gc_histogram.upload[i][0])] += mg.statistics.gc_histogram.upload[i][1];
+	    }
+	    for (var i=0; i<101; i++) {
+		sequenceGCQC.push({ x: i, y: qc[i] });
+		sequenceGCUpload.push({ x: i, y: up[i] });
 	    }
 	}
 	mg.sequenceGCQC = sequenceGCQC;
